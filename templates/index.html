@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketClassify - Clasificador Naïve Bayes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .logo-icon {
+            font-size: 48px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+        }
+
+        .card-header h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .card-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        /* Formulario */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Botones */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-primary, .btn-secondary {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Resultados */
+        .prediction-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .prediction-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Barra de confianza */
+        .confidence-section {
+            margin-bottom: 25px;
+        }
+
+        .confidence-section h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .confidence-bar-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 30px;
+        }
+
+        .confidence-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+
+        /* Probabilidades */
+        .probabilities-section {
+            margin-bottom: 25px;
+        }
+
+        .probabilities-section h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .probabilities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .prob-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prob-label {
+            width: 140px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .prob-bar-container {
+            flex: 1;
+            background: #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 24px;
+        }
+
+        .prob-bar {
+            height: 100%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            transition: width 0.5s ease;
+        }
+
+        .prob-value {
+            width: 60px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        /* Ticket info */
+        .ticket-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .ticket-info h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid white;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-overlay p {
+            color: white;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+
+        /* Ejemplos rápidos */
+        .examples-section {
+            margin-top: 20px;
+        }
+
+        .examples-title {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .example-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .example-btn {
+            background: #f0f0f0;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .example-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .form-actions {
+                flex-direction: column;
+            }
+            
+            .prob-label {
+                width: 100px;
+                font-size: 12px;
+            }
+
+            .example-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🎫</span>
+                <h1>TicketClassify</h1>
+            </div>
+            <p class="subtitle">Sistema de Clasificación Automática de Tickets con Naïve Bayes</p>
+        </header>
+
+        <main>
+            <div class="card">
+                <div class="card-header">
+                    <h2>📝 Nueva Solicitud</h2>
+                    <p>Ingrese la descripción del ticket para clasificarlo automáticamente</p>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="ticketInput">Descripción del problema:</label>
+                        <textarea id="ticketInput" rows="6" placeholder="Ejemplo: No puedo acceder a mi cuenta, necesito ayuda técnica urgente..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button id="classifyBtn" class="btn-primary">
+                            <span>🔍</span> Clasificar Ticket
+                        </button>
+                        <button id="clearBtn" class="btn-secondary">
+                            <span>🗑️</span> Limpiar
+                        </button>
+                    </div>
+                    
+                    <div class="examples-section">
+                        <div class="examples-title">📋 Ejemplos rápidos (click para probar):</div>
+                        <div class="example-buttons">
+                            <button class="example-btn" data-text="Mi computadora no enciende, necesito ayuda técnica urgente">💻 Soporte Técnico</button>
+                            <button class="example-btn" data-text="Me cobraron dos veces mi suscripción este mes, quiero que me devuelvan el dinero">💰 Facturación</button>
+                            <button class="example-btn" data-text="¿Cómo puedo cambiar mi contraseña? Tengo una duda sobre la plataforma">❓ Consulta General</button>
+                            <button class="example-btn" data-text="El producto llegó dañado y roto, quiero hacer una queja y que me reembolsen">😠 Queja</button>
+                            <button class="example-btn" data-text="Por favor cancelen mi cuenta y eliminen todos mis datos personales">🚫 Cancelación</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="results" class="card" style="display: none;">
+                <div class="card-header">
+                    <h2>📊 Resultado de Clasificación</h2>
+                    <p>El sistema ha analizado tu solicitud</p>
+                </div>
+                <div class="card-body">
+                    <div class="prediction-box">
+                        <div class="prediction-header">
+                            <span>🏷️</span>
+                            <span>Categoría Asignada:</span>
+                        </div>
+                        <div id="categoryResult" class="category-badge">---</div>
+                    </div>
+                    
+                    <div class="confidence-section">
+                        <h3>🎯 Nivel de Confianza</h3>
+                        <div class="confidence-bar-container">
+                            <div id="confidenceBar" class="confidence-bar">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="probabilities-section">
+                        <h3>📈 Probabilidades por Categoría</h3>
+                        <div id="probabilitiesList" class="probabilities-list"></div>
+                    </div>
+                    
+                    <div class="ticket-info">
+                        <h3>ℹ️ Información del Ticket</h3>
+                        <div class="info-row">
+                            <span class="info-label">ID del Ticket:</span>
+                            <span id="ticketId" class="info-value">---</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Palabras analizadas:</span>
+                            <span id="wordCount" class="info-value">---</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="loading" class="loading-overlay" style="display: none;">
+                <div class="spinner"></div>
+                <p>Analizando tu solicitud...</p>
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2026 - Clasificador Naïve Bayes | Inteligencia Artificial</p>
+            <p>Categorías: Soporte Técnico | Facturación | Consulta General | Queja | Cancelación</p>
+        </footer>
+    </div>
+
+    <script>
+        // Generar ID de ticket aleatorio
+        function generateTicketId() {
+            return 'TKT-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+        }
+
+        // Función principal de clasificación
+        async function classifyTicket() {
+            const ticketText = document.getElementById('ticketInput').value.trim();
+            
+            if (!ticketText) {
+                alert('Por favor, ingrese la descripción del ticket.');
+                return;
+            }
+            
+            // Mostrar loading
+            document.getElementById('loading').style.display = 'flex';
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticket_text: ticketText })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    document.getElementById('loading').style.display = 'none';
+                    return;
+                }
+                
+                // Mostrar resultados
+                document.getElementById('results').style.display = 'block';
+                
+                // Categoría
+                const categoryDiv = document.getElementById('categoryResult');
+                categoryDiv.textContent = data.categoria;
+                categoryDiv.style.backgroundColor = data.color;
+                
+                // Confianza
+                const confidencePercent = (data.confianza * 100).toFixed(1);
+                const confidenceBar = document.getElementById('confidenceBar');
+                confidenceBar.style.width = confidencePercent + '%';
+                confidenceBar.textContent = confidencePercent + '%';
+                
+                // Probabilidades
+                const probsList = document.getElementById('probabilitiesList');
+                probsList.innerHTML = '';
+                
+                const sortedProbs = Object.entries(data.probabilidades).sort((a, b) => b[1] - a[1]);
+                
+                // Colores para las barras de probabilidad
+                const probColors = {
+                    'Soporte Técnico': '#FF6B6B',
+                    'Facturación': '#4ECDC4',
+                    'Consulta General': '#45B7D1',
+                    'Queja': '#F9CA24',
+                    'Cancelación': '#6C5CE7'
+                };
+                
+                sortedProbs.forEach(([categoria, prob]) => {
+                    const probItem = document.createElement('div');
+                    probItem.className = 'prob-item';
+                    
+                    const probLabel = document.createElement('div');
+                    probLabel.className = 'prob-label';
+                    probLabel.textContent = categoria;
+                    
+                    const probBarContainer = document.createElement('div');
+                    probBarContainer.className = 'prob-bar-container';
+                    
+                    const probBar = document.createElement('div');
+                    probBar.className = 'prob-bar';
+                    probBar.style.width = (prob * 100) + '%';
+                    probBar.style.backgroundColor = probColors[categoria] || '#667eea';
+                    probBar.textContent = (prob * 100).toFixed(1) + '%';
+                    
+                    const probValue = document.createElement('div');
+                    probValue.className = 'prob-value';
+                    probValue.textContent = (prob * 100).toFixed(1) + '%';
+                    
+                    probBarContainer.appendChild(probBar);
+                    probItem.appendChild(probLabel);
+                    probItem.appendChild(probBarContainer);
+                    probItem.appendChild(probValue);
+                    probsList.appendChild(probItem);
+                });
+                
+                // Información del ticket
+                document.getElementById('ticketId').textContent = generateTicketId();
+                document.getElementById('wordCount').textContent = data.tokens_encontrados;
+                
+                // Ocultar loading
+                document.getElementById('loading').style.display = 'none';
+                
+                // Scroll suave a los resultados
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud: ' + error.message);
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+        
+        // Configurar botones de ejemplo
+        function setupExampleButtons() {
+            const exampleBtns = document.querySelectorAll('.example-btn');
+            exampleBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const text = btn.getAttribute('data-text');
+                    document.getElementById('ticketInput').value = text;
+                    // Opcional: clasificar automáticamente
+                    classifyTicket();
+                });
+            });
+        }
+        
+        // Event listeners
+        document.getElementById('classifyBtn').addEventListener('click', classifyTicket);
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            document.getElementById('ticketInput').value = '';
+            document.getElementById('results').style.display = 'none';
+        });
+        
+        // Ctrl+Enter o Cmd+Enter para clasificar
+        document.getElementById('ticketInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                classifyTicket();
+            }
+        });
+        
+        // Inicializar botones de ejemplo
+        setupExampleButtons();
+        
+        // Verificar salud del servidor al cargar
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    console.log('✅ Servidor listo. Clases disponibles:', data.clases_disponibles);
+                }
+            } catch (error) {
+                console.warn('⚠️ No se pudo conectar con el servidor. Asegúrate de que app.py esté ejecutándose.');
+            }
+        }
+        
+        checkHealth();
+    </script>
+</body>
+</html>
