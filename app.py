@@ -75,9 +75,9 @@ def get_color_for_category(category):
 
 if os.path.exists(model_path):
     modelo.load_model(model_path)
-    print("✅ Modelo cargado correctamente")
+    print("[OK] Modelo cargado correctamente")
 else:
-    print("⚠️ Modelo no encontrado. Ejecute naive_bayes.py primero")
+    print("[WARNING] Modelo no encontrado. Ejecute naive_bayes.py primero")
 
 @app.route('/')
 def home():

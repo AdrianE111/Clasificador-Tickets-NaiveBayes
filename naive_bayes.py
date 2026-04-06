@@ -30,7 +30,7 @@ class NaiveBayesClassifier:
             vocab: Diccionario de vocabulario {palabra: indice}
         """
         print("\n" + "="*50)
-        print("INICIANDO ENTRENAMIENTO DE NAÏVE BAYES")
+        print("INICIANDO ENTRENAMIENTO DE NAIVE BAYES")
         print("="*50)
         
         self.vocab = vocab
@@ -41,15 +41,15 @@ class NaiveBayesClassifier:
         class_counts = df['Category'].value_counts().to_dict()
         self.classes = list(class_counts.keys())
         
-        print(f"\n📊 Clases encontradas: {self.classes}")
-        print(f"📊 Total de documentos: {total_docs}")
+        print(f"\nClases encontradas: {self.classes}")
+        print(f"Total de documentos: {total_docs}")
         
         for c in self.classes:
             self.priors[c] = math.log(float(class_counts[c]) / float(total_docs))
             print(f"   P({c}) = log({class_counts[c]}/{total_docs}) = {self.priors[c]:.4f}")
         
         # 2. Contar frecuencias de palabras por clase
-        print("\n📝 Contando frecuencias de palabras por clase...")
+        print("\nContando frecuencias de palabras por clase...")
         for _, row in df.iterrows():
             category = row['Category']
             for word in row['cleaned_tokens']:
@@ -57,11 +57,11 @@ class NaiveBayesClassifier:
                 self.class_word_totals[category] += 1
         
         # Mostrar estadísticas
-        print("\n📊 Estadísticas de entrenamiento:")
+        print("\nEstadísticas de entrenamiento:")
         for c in self.classes:
             print(f"   {c}: {self.class_word_totals[c]} palabras totales, {len(self.word_counts[c])} palabras únicas")
         
-        print("\n✅ Entrenamiento finalizado!")
+        print("\n[OK] Entrenamiento finalizado!")
         print("="*50)
     
     def predict(self, tokens):
@@ -142,7 +142,7 @@ class NaiveBayesClassifier:
         }
         with open(filepath, 'wb') as f:
             pickle.dump(data, f)
-        print(f"\n💾 Modelo guardado en: {filepath}")
+        print(f"\n[OK] Modelo guardado en: {filepath}")
     
     def load_model(self, filepath):
         """Carga un modelo entrenado desde un archivo pickle."""
@@ -162,7 +162,7 @@ class NaiveBayesClassifier:
         self.vocab_size = int(data['vocab_size'])
         self.vocab = data['vocab']
         
-        print(f"\n📂 Modelo cargado desde: {filepath}")
+        print(f"\n[OK] Modelo cargado desde: {filepath}")
         print(f"   Clases: {self.classes}")
         print(f"   Vocabulario: {self.vocab_size} palabras")
 
@@ -193,17 +193,17 @@ if __name__ == "__main__":
         ]
         
         print("\n" + "="*50)
-        print("PRUEBAS DE CLASIFICACIÓN")
+        print("PRUEBAS DE CLASIFICACION")
         print("="*50)
         
         for ticket in test_tickets:
             tokens = clean_text(ticket)
             clase, probs = modelo.predict_proba(tokens)
-            print(f"\n📝 Ticket: {ticket[:60]}...")
-            print(f"   ✅ Predicción: {clase}")
-            print(f"   📊 Confianza: {max(probs.values())*100:.1f}%")
+            print(f"\nTicket: {ticket[:60]}...")
+            print(f"   Prediccion: {clase}")
+            print(f"   Confianza: {max(probs.values())*100:.1f}%")
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
         import traceback
         traceback.print_exc()
