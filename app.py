@@ -15,6 +15,7 @@ class NaiveBayesClassifier:
         self.class_word_totals = defaultdict(int)
         self.vocab_size = 0
         self.vocab = {}
+        self.dataset_language = 'english'
     
     def load_model(self, filepath):
         with open(filepath, 'rb') as f:
@@ -28,6 +29,7 @@ class NaiveBayesClassifier:
         self.class_word_totals = defaultdict(int, data['class_word_totals'])
         self.vocab_size = data['vocab_size']
         self.vocab = data['vocab']
+        self.dataset_language = data.get('dataset_language', 'english')
     
     def predict_proba(self, tokens):
         import math
@@ -94,7 +96,7 @@ def predict():
             return jsonify({'error': 'No se proporcionó texto'}), 400
         
         # Preprocesar y predecir
-        tokens = clean_text(ticket_text)
+        tokens = clean_text(ticket_text, language=modelo.dataset_language)
         categoria, probabilidades = modelo.predict_proba(tokens)
         
         # Preparar respuesta

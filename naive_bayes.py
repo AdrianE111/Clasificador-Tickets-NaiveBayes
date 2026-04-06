@@ -20,15 +20,18 @@ class NaiveBayesClassifier:
         self.class_word_totals = defaultdict(int)
         self.vocab_size = 0
         self.vocab = {}
+        self.dataset_language = 'english'
     
-    def train(self, df, vocab):
+    def train(self, df, vocab, dataset_language='english'):
         """
         Entrena el modelo Naïve Bayes.
         
         Args:
             df: DataFrame con columnas 'Category' y 'cleaned_tokens'
             vocab: Diccionario de vocabulario {palabra: indice}
+            dataset_language: Idioma del dataset ('english' o 'spanish')
         """
+        self.dataset_language = dataset_language
         print("\n" + "="*50)
         print("INICIANDO ENTRENAMIENTO DE NAIVE BAYES")
         print("="*50)
@@ -138,7 +141,8 @@ class NaiveBayesClassifier:
             'word_counts': {k: dict(v) for k, v in self.word_counts.items()},
             'class_word_totals': dict(self.class_word_totals),
             'vocab_size': self.vocab_size,
-            'vocab': self.vocab
+            'vocab': self.vocab,
+            'dataset_language': self.dataset_language
         }
         with open(filepath, 'wb') as f:
             pickle.dump(data, f)
@@ -161,6 +165,7 @@ class NaiveBayesClassifier:
             self.class_word_totals[class_name] = int(total)
         self.vocab_size = int(data['vocab_size'])
         self.vocab = data['vocab']
+        self.dataset_language = data.get('dataset_language', 'english')
         
         print(f"\n[OK] Modelo cargado desde: {filepath}")
         print(f"   Clases: {self.classes}")
@@ -174,22 +179,22 @@ if __name__ == "__main__":
     
     try:
         # 1. Cargar y preprocesar datos
-        df, vocab = load_and_preprocess_data(csv_file)
+        df, vocab, dataset_language = load_and_preprocess_data(csv_file)
         
         # 2. Entrenar modelo
         modelo = NaiveBayesClassifier()
-        modelo.train(df, vocab)
+        modelo.train(df, vocab, dataset_language)
         
         # 3. Guardar modelo
         modelo.save_model(os.path.join(base_dir, 'modelo_entrenado.pkl'))
         
         # 4. Prueba en vivo
         test_tickets = [
-            "My computer won't turn on, I need technical support immediately",
-            "I was charged twice for my subscription this month, please fix my billing",
-            "How do I use the new dashboard? Just a general question about features",
-            "The product arrived damaged and broken, I want to complain and get a refund",
-            "Please cancel my account and delete all my personal data"
+            "Mi aplicación muestra un error 500 al intentar guardar el archivo",
+            "Me cobraron dos veces este mes en mi tarjeta de crédito",
+            "¿Cómo puedo cambiar mi contraseña en la plataforma?",
+            "Quiero presentar una queja porque el producto llegó dañado",
+            "Por favor cancelen mi cuenta y eliminen mis datos personales"
         ]
         
         print("\n" + "="*50)
@@ -197,7 +202,7 @@ if __name__ == "__main__":
         print("="*50)
         
         for ticket in test_tickets:
-            tokens = clean_text(ticket)
+            tokens = clean_text(ticket, language='spanish')
             clase, probs = modelo.predict_proba(tokens)
             print(f"\nTicket: {ticket[:60]}...")
             print(f"   Prediccion: {clase}")

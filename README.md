@@ -67,7 +67,9 @@ Clasificador-Tickets-NaiveBayes/
 │
 ├── data/
 │   └── archive/
-│       └── customer_support_tickets.csv  # Dataset
+│       ├── customer_support_tickets.csv  # Dataset original
+│       ├── customer_support_tickets_mejorado.csv  # Dataset mejorado en inglés con ejemplos específicos
+│       └── customer_support_tickets_mejorado_es.csv  # Dataset mejorado en español con ejemplos específicos
 │
 ├── modelo_entrenado.pkl            # Modelo persistente
 ├── requirements.txt                # Dependencias Python
@@ -102,6 +104,8 @@ python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk
 ```bash
 python naive_bayes.py
 ```
+
+> El script `naive_bayes.py` detecta automáticamente `data/archive/customer_support_tickets_mejorado_es.csv` y lo utiliza como dataset preferente si existe. Si no existe, usará `customer_support_tickets_mejorado.csv` en inglés.
 
 ### 2. Evaluar con K-Folds
 

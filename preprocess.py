@@ -15,29 +15,42 @@ except LookupError:
     nltk.download('wordnet')
 
 lemmatizer = WordNetLemmatizer()
-stop_words = set(stopwords.words('english'))
+english_stop_words = set(stopwords.words('english'))
+spanish_stop_words = set(stopwords.words('spanish'))
 
-def clean_text(text):
-    """Limpia, tokeniza y lematiza el texto."""
+
+def clean_text(text, language='english'):
+    """Limpia, tokeniza y lematiza el texto para inglés o español."""
     if not isinstance(text, str):
         return []
     
     # Minúsculas
     text = text.lower()
     # Eliminar caracteres especiales y números
-    text = re.sub(r'[^a-z\s]', '', text)
+    if language == 'spanish':
+        text = re.sub(r'[^a-záéíóúñü\s]', '', text)
+    else:
+        text = re.sub(r'[^a-z\s]', '', text)
     # Eliminar espacios extra
     text = re.sub(r'\s+', ' ', text).strip()
     
     # Tokenización
     tokens = word_tokenize(text)
     
-    # Eliminación de stopwords, palabras cortas y lematización
-    cleaned_tokens = [
-        lemmatizer.lemmatize(word) 
-        for word in tokens 
-        if word not in stop_words and len(word) > 2
-    ]
+    stop_words = spanish_stop_words if language == 'spanish' else english_stop_words
+    
+    if language == 'spanish':
+        cleaned_tokens = [
+            word
+            for word in tokens
+            if word not in stop_words and len(word) > 2
+        ]
+    else:
+        cleaned_tokens = [
+            lemmatizer.lemmatize(word)
+            for word in tokens
+            if word not in stop_words and len(word) > 2
+        ]
     return cleaned_tokens
 
 def build_vocabulary(corpus_tokens):
@@ -50,6 +63,21 @@ def build_vocabulary(corpus_tokens):
 def load_and_preprocess_data(csv_path):
     """Carga el dataset y mapea a las 5 categorías del proyecto."""
     print(f"Cargando dataset desde: {csv_path}")
+    base_dir = os.path.dirname(csv_path)
+    improved_es_path = os.path.join(base_dir, 'customer_support_tickets_mejorado_es.csv')
+    improved_path = os.path.join(base_dir, 'customer_support_tickets_mejorado.csv')
+    dataset_language = 'english'
+
+    if os.path.basename(csv_path) == 'customer_support_tickets.csv':
+        if os.path.exists(improved_es_path):
+            print(f"Dataset mejorado en español encontrado: {improved_es_path}")
+            csv_path = improved_es_path
+            dataset_language = 'spanish'
+        elif os.path.exists(improved_path):
+            print(f"Dataset mejorado en inglés encontrado: {improved_path}")
+            csv_path = improved_path
+            dataset_language = 'english'
+
     df = pd.read_csv(csv_path)
     
     print(f"Columnas disponibles: {df.columns.tolist()}")
@@ -91,6 +119,7 @@ def load_and_preprocess_data(csv_path):
     
     # Mapeo a las categorías en español
     category_map = {
+        # Inglés
         'Technical issue': 'Soporte Técnico',
         'Technical Issue': 'Soporte Técnico',
         'technical': 'Soporte Técnico',
@@ -105,7 +134,17 @@ def load_and_preprocess_data(csv_path):
         'Complaint': 'Queja',
         'Cancellation request': 'Cancelación',
         'Cancellation': 'Cancelación',
-        'Cancel': 'Cancelación'
+        'Cancel': 'Cancelación',
+        # Español
+        'soporte técnico': 'Soporte Técnico',
+        'facturación': 'Facturación',
+        'consulta general': 'Consulta General',
+        'queja': 'Queja',
+        'reclamación': 'Queja',
+        'cancelación': 'Cancelación',
+        'cancelar': 'Cancelación',
+        'dar de baja': 'Cancelación',
+        'baja': 'Cancelación'
     }
     
     # Aplicar mapeo (búsqueda parcial)
@@ -125,7 +164,7 @@ def load_and_preprocess_data(csv_path):
     print(df['Category'].value_counts())
     
     print("\nProcesando tickets...")
-    df['cleaned_tokens'] = df['Ticket Description'].apply(clean_text)
+    df['cleaned_tokens'] = df['Ticket Description'].apply(lambda text: clean_text(text, language=dataset_language))
     
     # Filtrar tickets vacíos
     df = df[df['cleaned_tokens'].apply(len) > 0]
@@ -133,7 +172,7 @@ def load_and_preprocess_data(csv_path):
     vocab = build_vocabulary(df['cleaned_tokens'])
     print(f"Vocabulario construido: {len(vocab)} palabras únicas")
     
-    return df, vocab
+    return df, vocab, dataset_language
 
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(__file__))

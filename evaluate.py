@@ -296,7 +296,7 @@ if __name__ == "__main__":
     
     try:
         # Cargar datos
-        df, vocab = load_and_preprocess_data(csv_file)
+        df, vocab, _ = load_and_preprocess_data(csv_file)
         
         # Evaluar con K-Folds
         evaluator = ModelEvaluator(k=5)
