@@ -182,8 +182,8 @@ El performance depende de la calidad y discriminabilidad de las palabras en el d
 
 ## Autores
 
-- **Pablo Bocel**
 - **Adrián Escalón**
+- **Pablo Bocel**
 - **Alejandro Estupinián**
 
 **Universidad:** Rafael Landívar
