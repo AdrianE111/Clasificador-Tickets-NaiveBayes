@@ -189,20 +189,29 @@ if __name__ == "__main__":
         modelo.save_model(os.path.join(base_dir, 'modelo_entrenado.pkl'))
         
         # 4. Prueba en vivo
-        test_tickets = [
-            "Mi aplicación muestra un error 500 al intentar guardar el archivo",
-            "Me cobraron dos veces este mes en mi tarjeta de crédito",
-            "¿Cómo puedo cambiar mi contraseña en la plataforma?",
-            "Quiero presentar una queja porque el producto llegó dañado",
-            "Por favor cancelen mi cuenta y eliminen mis datos personales"
-        ]
-        
+        if dataset_language == 'english':
+            test_tickets = [
+                "I have a technical issue: the app crashes when I try to save a file",
+                "I was charged twice this month and need help fixing my invoice",
+                "How can I change my password on the platform?",
+                "I want to file a complaint because the product arrived damaged",
+                "Please cancel my plan and stop charging my card"
+            ]
+        else:
+            test_tickets = [
+                "Mi aplicación muestra un error 500 al intentar guardar el archivo",
+                "Me cobraron dos veces este mes en mi tarjeta de crédito",
+                "¿Cómo puedo cambiar mi contraseña en la plataforma?",
+                "Quiero presentar una queja porque el producto llegó dañado",
+                "Por favor cancelen mi cuenta y eliminen mis datos personales"
+            ]
+
         print("\n" + "="*50)
-        print("PRUEBAS DE CLASIFICACION")
+        print(f"PRUEBAS DE CLASIFICACION ({dataset_language})")
         print("="*50)
         
         for ticket in test_tickets:
-            tokens = clean_text(ticket, language='spanish')
+            tokens = clean_text(ticket, language=dataset_language)
             clase, probs = modelo.predict_proba(tokens)
             print(f"\nTicket: {ticket[:60]}...")
             print(f"   Prediccion: {clase}")
