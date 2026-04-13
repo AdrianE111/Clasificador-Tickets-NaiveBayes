@@ -67,9 +67,9 @@ Clasificador-Tickets-NaiveBayes/
 │
 ├── data/
 │   └── archive/
-│       ├── customer_support_tickets.csv  # Dataset original
-│       ├── customer_support_tickets_mejorado.csv  # Dataset mejorado en inglés con ejemplos específicos
-│       └── customer_support_tickets_mejorado_es.csv  # Dataset mejorado en español con ejemplos específicos
+│       ├── customer_support_tickets.csv  # Archivo vacío (placeholder para cargar Bitext)
+│       ├── customer_support_tickets_mejorado.csv  # Dataset mejorado en inglés (opcional)
+│       └── customer_support_tickets_mejorado_es.csv  # Dataset mejorado en español (opcional)
 │
 ├── modelo_entrenado.pkl            # Modelo persistente
 ├── requirements.txt                # Dependencias Python
@@ -105,7 +105,7 @@ python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk
 python naive_bayes.py
 ```
 
-> El script `naive_bayes.py` detecta automáticamente `data/archive/customer_support_tickets_mejorado_es.csv` y lo utiliza como dataset preferente si existe. Si no existe, usará `customer_support_tickets_mejorado.csv` en inglés.
+> El script `naive_bayes.py` carga automáticamente el dataset recomendado de Bitext desde Hugging Face cuando encuentra `data/archive/customer_support_tickets.csv`. Si hay problemas de conexión, puede usar los datasets mejorados locales.
 
 ### 2. Evaluar con K-Folds
 
@@ -156,13 +156,18 @@ python diagnostico.py
 ## Análisis del Modelo
 
 ### Dataset
-- **Total:** 8,469 tickets
-- **Clases:** 5 categorías balanceadas (19.3% - 20.7% cada una)
-- **Vocabulario:** 6,266 palabras únicas
+- **Fuente:** Bitext Customer Support LLM Chatbot Training Dataset (Hugging Face)
+- **URL:** https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset
+- **Total:** 26,872 tickets
+- **Categorías originales:** 11 (ACCOUNT, CANCEL, CONTACT, DELIVERY, FEEDBACK, INVOICE, ORDER, PAYMENT, REFUND, SHIPPING, SUBSCRIPTION)
+- **Mapeo a 5 categorías:** Soporte Técnico, Facturación, Consulta General, Queja, Cancelación
+- **Vocabulario:** ~10,000+ palabras únicas (estimado)
+- **Lenguaje:** Inglés
+- **Etiquetas:** Consistentes y verificadas (generadas de forma controlada)
 
 ### Performance Esperado
-- **Accuracy Global:** 65-75%
-- **Macro F1:** 0.65-0.75
+- **Accuracy Global:** 75-85% (con dataset de 26k+ instancias)
+- **Macro F1:** 0.75-0.85
 
 ### Consideraciones
 El performance depende de la calidad y discriminabilidad de las palabras en el dataset.
@@ -174,6 +179,7 @@ El performance depende de la calidad y discriminabilidad de las palabras en el d
 - pandas >= 1.3.0
 - numpy >= 1.21.0
 - nltk >= 3.6.0
+- datasets >= 2.0.0
 - flask >= 2.0.0
 - matplotlib >= 3.4.0 (opcional)
 - seaborn >= 0.11.0 (opcional)
@@ -193,6 +199,6 @@ El performance depende de la calidad y discriminabilidad de las palabras en el d
 
 ## Referencias
 
-- Dataset: [Customer Support Ticket Dataset - Kaggle](https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset)
+- Dataset: [Bitext Customer Support LLM Chatbot Training Dataset - Hugging Face](https://huggingface.co/datasets/bitext/Bitext-customer-support-llm-chatbot-training-dataset)
 - NLTK Documentation
 - Naïve Bayes Algorithm

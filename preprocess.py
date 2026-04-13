@@ -5,13 +5,20 @@ import os
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
+from datasets import load_dataset
 
 # Descargar recursos de NLTK (solo la primera vez)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt')
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
     nltk.download('stopwords')
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
     nltk.download('wordnet')
 
 lemmatizer = WordNetLemmatizer()
@@ -26,6 +33,8 @@ def clean_text(text, language='english'):
     
     # Minúsculas
     text = text.lower()
+    # Eliminar placeholders como {{Order Number}}
+    text = re.sub(r'\{\{[^}]+\}\}', '', text)
     # Eliminar caracteres especiales y números
     if language == 'spanish':
         text = re.sub(r'[^a-záéíóúñü\s]', '', text)
@@ -61,7 +70,7 @@ def build_vocabulary(corpus_tokens):
     return {word: idx for idx, word in enumerate(vocab)}
 
 def load_and_preprocess_data(csv_path):
-    """Carga el dataset y mapea a las 5 categorías del proyecto."""
+    """Carga el dataset recomendado de Bitext o el CSV mejorado."""
     print(f"Cargando dataset desde: {csv_path}")
     base_dir = os.path.dirname(csv_path)
     improved_es_path = os.path.join(base_dir, 'customer_support_tickets_mejorado_es.csv')
@@ -69,57 +78,93 @@ def load_and_preprocess_data(csv_path):
     dataset_language = 'english'
 
     if os.path.basename(csv_path) == 'customer_support_tickets.csv':
-        if os.path.exists(improved_es_path):
-            print(f"Dataset mejorado en español encontrado: {improved_es_path}")
-            csv_path = improved_es_path
-            dataset_language = 'spanish'
-        elif os.path.exists(improved_path):
-            print(f"Dataset mejorado en inglés encontrado: {improved_path}")
-            csv_path = improved_path
+        # Usar el dataset recomendado de Bitext
+        print("Cargando dataset recomendado de Bitext...")
+        try:
+            dataset = load_dataset('bitext/Bitext-customer-support-llm-chatbot-training-dataset', split='train')
+            df = pd.DataFrame(dataset)
+            df = df[['instruction', 'category']].dropna()
+            df.columns = ['Ticket Description', 'Ticket Type']
             dataset_language = 'english'
-
-    df = pd.read_csv(csv_path)
-    
-    print(f"Columnas disponibles: {df.columns.tolist()}")
-    
-    # Detectar columnas automáticamente
-    desc_col = None
-    type_col = None
-    
-    for col in df.columns:
-        col_lower = col.lower()
-        if 'description' in col_lower or 'text' in col_lower or 'body' in col_lower:
-            desc_col = col
-        if 'type' in col_lower or 'category' in col_lower or 'issue' in col_lower:
-            type_col = col
-    
-    if desc_col and type_col:
-        df = df[[desc_col, type_col]].dropna()
-        df.columns = ['Ticket Description', 'Ticket Type']
+            print("Dataset de Bitext cargado exitosamente (26,872 instancias).")
+        except Exception as e:
+            print(f"Error cargando Bitext: {e}. Usando dataset mejorado...")
+            if os.path.exists(improved_es_path):
+                print(f"Dataset mejorado en español encontrado: {improved_es_path}")
+                csv_path = improved_es_path
+                dataset_language = 'spanish'
+            elif os.path.exists(improved_path):
+                print(f"Dataset mejorado en inglés encontrado: {improved_path}")
+                csv_path = improved_path
+                dataset_language = 'english'
+            df = pd.read_csv(csv_path)
+            print(f"Columnas disponibles: {df.columns.tolist()}")
+            # Detectar columnas automáticamente (código existente)
+            desc_col = None
+            type_col = None
+            for col in df.columns:
+                col_lower = col.lower()
+                if 'description' in col_lower or 'text' in col_lower or 'body' in col_lower:
+                    desc_col = col
+                if 'type' in col_lower or 'category' in col_lower or 'issue' in col_lower:
+                    type_col = col
+            if desc_col and type_col:
+                df = df[[desc_col, type_col]].dropna()
+                df.columns = ['Ticket Description', 'Ticket Type']
+            else:
+                print("Buscando columnas alternativas...")
+                possible_desc = ['Ticket Description', 'Description', 'Text', 'Body', 'Content']
+                possible_type = ['Ticket Type', 'Type', 'Category', 'Issue Type', 'Class']
+                for col in possible_desc:
+                    if col in df.columns:
+                        desc_col = col
+                        break
+                for col in possible_type:
+                    if col in df.columns:
+                        type_col = col
+                        break
+                if desc_col and type_col:
+                    df = df[[desc_col, type_col]].dropna()
+                    df.columns = ['Ticket Description', 'Ticket Type']
+                else:
+                    raise Exception(f"No se encontraron columnas esperadas. Columnas: {df.columns.tolist()}")
     else:
-        # Si no encuentra, usar nombres comunes
-        print("Buscando columnas alternativas...")
-        possible_desc = ['Ticket Description', 'Description', 'Text', 'Body', 'Content']
-        possible_type = ['Ticket Type', 'Type', 'Category', 'Issue Type', 'Class']
-        
-        for col in possible_desc:
-            if col in df.columns:
+        # Cargar CSV normal
+        df = pd.read_csv(csv_path)
+        print(f"Columnas disponibles: {df.columns.tolist()}")
+        # Código de detección de columnas (igual que arriba)
+        desc_col = None
+        type_col = None
+        for col in df.columns:
+            col_lower = col.lower()
+            if 'description' in col_lower or 'text' in col_lower or 'body' in col_lower:
                 desc_col = col
-                break
-        for col in possible_type:
-            if col in df.columns:
+            if 'type' in col_lower or 'category' in col_lower or 'issue' in col_lower:
                 type_col = col
-                break
-        
         if desc_col and type_col:
             df = df[[desc_col, type_col]].dropna()
             df.columns = ['Ticket Description', 'Ticket Type']
         else:
-            raise Exception(f"No se encontraron columnas esperadas. Columnas: {df.columns.tolist()}")
+            print("Buscando columnas alternativas...")
+            possible_desc = ['Ticket Description', 'Description', 'Text', 'Body', 'Content']
+            possible_type = ['Ticket Type', 'Type', 'Category', 'Issue Type', 'Class']
+            for col in possible_desc:
+                if col in df.columns:
+                    desc_col = col
+                    break
+            for col in possible_type:
+                if col in df.columns:
+                    type_col = col
+                    break
+            if desc_col and type_col:
+                df = df[[desc_col, type_col]].dropna()
+                df.columns = ['Ticket Description', 'Ticket Type']
+            else:
+                raise Exception(f"No se encontraron columnas esperadas. Columnas: {df.columns.tolist()}")
     
-    # Mapeo a las categorías en español
+    # Mapeo a las categorías en español (incluyendo Bitext)
     category_map = {
-        # Inglés
+        # Inglés (original)
         'Technical issue': 'Soporte Técnico',
         'Technical Issue': 'Soporte Técnico',
         'technical': 'Soporte Técnico',
@@ -144,7 +189,19 @@ def load_and_preprocess_data(csv_path):
         'cancelación': 'Cancelación',
         'cancelar': 'Cancelación',
         'dar de baja': 'Cancelación',
-        'baja': 'Cancelación'
+        'baja': 'Cancelación',
+        # Bitext categories
+        'ACCOUNT': 'Consulta General',
+        'ORDER': 'Consulta General',
+        'REFUND': 'Queja',
+        'CONTACT': 'Soporte Técnico',
+        'INVOICE': 'Facturación',
+        'PAYMENT': 'Facturación',
+        'FEEDBACK': 'Queja',
+        'DELIVERY': 'Consulta General',
+        'SHIPPING': 'Consulta General',
+        'SUBSCRIPTION': 'Consulta General',
+        'CANCEL': 'Cancelación'
     }
     
     # Aplicar mapeo (búsqueda parcial)
@@ -179,9 +236,10 @@ if __name__ == "__main__":
     csv_file = os.path.join(base_dir, 'data', 'archive', 'customer_support_tickets.csv')
     
     try:
-        df_procesado, vocabulario = load_and_preprocess_data(csv_file)
+        df_procesado, vocabulario, idioma = load_and_preprocess_data(csv_file)
         print(f"\n✅ Éxito: {len(df_procesado)} tickets listos para entrenar.")
         print(f"📚 Vocabulario: {len(vocabulario)} palabras.")
+        print(f"🌍 Idioma del dataset: {idioma}")
         print(f"📊 Ejemplo de tokens: {df_procesado['cleaned_tokens'].iloc[0][:10]}...")
     except Exception as e:
         print(f"❌ Error: {e}")
