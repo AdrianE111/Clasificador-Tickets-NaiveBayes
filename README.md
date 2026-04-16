@@ -85,12 +85,34 @@ Clasificador-Tickets-NaiveBayes/
 - Python 3.8+
 - pip
 
-### Paso 1: Instalar Dependencias
+### Paso 1: Crear Virtual Environment
+```bash
+python -m venv .venv
+```
+
+### Paso 2: Activar Virtual Environment
+
+**En PowerShell:**
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+**En Command Prompt (cmd):**
+```cmd
+.\.venv\Scripts\activate.bat
+```
+
+**En Linux/Mac:**
+```bash
+source .venv/bin/activate
+```
+
+### Paso 3: Instalar Dependencias
 ```bash
 pip install -r requirements.txt
 ```
 
-### Paso 2: Descargar Recursos NLTK
+### Paso 4: Descargar Recursos NLTK
 ```bash
 python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
 ```
