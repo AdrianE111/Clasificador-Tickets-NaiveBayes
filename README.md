@@ -1,57 +1,5 @@
 # TicketClassify - Clasificador de Tickets con Naïve Bayes
 
-## Descripción del Proyecto
-
-TicketClassify es un **sistema de clasificación automática de tickets de soporte técnico** basado en el algoritmo **Naïve Bayes Multinomial**. El proyecto implementa desde cero cada componente del algoritmo: preprocesamiento de texto, construcción del vocabulario (Bag of Words), cálculo de probabilidades con Laplace Smoothing, evaluación con K-Folds Cross Validation y una interfaz web funcional.
-
-**Objetivo:** Clasificar automáticamente solicitudes de clientes en 5 categorías:
-- Soporte Técnico
-- Facturación
-- Consulta General
-- Queja
-- Cancelación
-
----
-
-## Requisitos del Proyecto
-
-### Requisitos Técnicos Cumplidos
-
-✅ **Implementación Manual de Naïve Bayes**
-- Algoritmo implementado desde cero (sin scikit-learn)
-- Cálculo manual de probabilidades a priori P(c)
-- Cálculo de verosimilitud con Laplace Smoothing
-- Uso de logaritmos para evitar underflow numérico
-
-✅ **Técnicas Obligatorias**
-- Bag of Words: Construcción del vocabulario
-- Laplace Smoothing: (count + 1) / (total + vocab_size)
-- Suma de Logaritmos: Productos → log(P) para estabilidad numérica
-- K-Folds Cross Validation: K=5, implementación manual
-- Matriz de Confusión: Análisis de confusiones entre clases
-- Métricas por clase: Precision, Recall, F1-Score, Accuracy, Macro F1
-
-✅ **Preprocesamiento de Texto**
-- Tokenización con NLTK
-- Eliminación de stopwords (inglés)
-- Lematización con WordNetLemmatizer
-- Conversión a minúsculas y limpieza de caracteres especiales
-
-✅ **Persistencia del Modelo**
-- Guardado en pickle: `modelo_entrenado.pkl`
-- Carga automática en la aplicación web
-
-✅ **Interfaz Web Completa**
-- Sistema de tickets con ID autogenerado
-- Campo de asunto y descripción detallada
-- Historial persistente con localStorage
-- Modal de detalles para cada ticket
-- Tema claro/oscuro
-- Ejemplos rápidos para guiar al usuario
-- Visualización de probabilidades por clase
-
----
-
 ## Estructura del Proyecto
 
 ```
