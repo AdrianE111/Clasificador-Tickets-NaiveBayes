@@ -91,12 +91,6 @@ python app.py
 
 Abre: `http://localhost:5000`
 
-### 4. Diagnosticar el Modelo
-
-```bash
-python diagnostico.py
-```
-
 ---
 
 ## Descripción del Código
